@@ -14,7 +14,22 @@
       <span class="topbar__icon">⬡</span>
       <span class="topbar__name">ProductHub</span>
     </div>
-    <a href="/products/new" class="btn btn--primary btn--sm">+ Add Product</a>
+    <div class="topbar__right">
+      <!-- Currency switcher -->
+      <div class="currency-switcher" title="Switch display currency">
+        <span class="currency-switcher__label">Currency:</span>
+        <div class="currency-tabs" id="currencyTabs">
+          <button class="currency-tab active" data-currency="USD" data-rate="1" data-symbol="$">USD</button>
+          <button class="currency-tab" data-currency="EUR" data-rate="<%= rates.EUR %>" data-symbol="€">EUR</button>
+          <button class="currency-tab" data-currency="INR" data-rate="<%= rates.INR %>" data-symbol="₹">INR</button>
+          <button class="currency-tab" data-currency="GBP" data-rate="<%= rates.GBP %>" data-symbol="£">GBP</button>
+        </div>
+        <span class="currency-source <%= rates.source === 'live' ? 'currency-source--live' : 'currency-source--fallback' %>">
+          <%= rates.source === 'live' ? '● Live' : '○ Offline' %>
+        </span>
+      </div>
+      <a href="/products/new" class="btn btn--primary btn--sm">+ Add Product</a>
+    </div>
   </header>
 
   <main class="page">
@@ -23,7 +38,14 @@
     <div class="page__head">
       <div>
         <h1 class="page__title">Inventory Dashboard</h1>
-        <p class="page__sub">Live view of all products in your catalogue.</p>
+        <p class="page__sub">
+          Live view of all products.
+          <% if (rates.source === 'live') { %>
+            Rates updated at <strong><%= rates.updatedAt %></strong>.
+          <% } else { %>
+            <span class="text-warn">Using offline exchange rates.</span>
+          <% } %>
+        </p>
       </div>
     </div>
 
@@ -35,7 +57,10 @@
       </div>
       <div class="stat-card stat-card--accent">
         <span class="stat-card__label">Inventory Value</span>
-        <span class="stat-card__value">$<%= totalValue %></span>
+        <span class="stat-card__value" id="totalValue"
+          data-usd="<%= totalValueUSD %>">
+          $<%= totalValueUSD.toFixed(2) %>
+        </span>
       </div>
       <div class="stat-card stat-card--warn">
         <span class="stat-card__label">Low Stock</span>
@@ -90,7 +115,7 @@
               <th>#</th>
               <th>Product Name</th>
               <th>Category</th>
-              <th>Price</th>
+              <th class="price-col">Price <span class="price-currency-label" id="priceColLabel">(USD)</span></th>
               <th>Stock</th>
               <th>Status</th>
               <th>Actions</th>
@@ -107,7 +132,9 @@
               <td class="table__num"><%= i + 1 %></td>
               <td class="table__name"><%= product.product_name %></td>
               <td><span class="badge badge--cat"><%= product.category %></span></td>
-              <td class="table__price">$<%= product.price.toFixed(2) %></td>
+              <td class="table__price price-cell" data-usd="<%= product.price %>">
+                $<%= product.price.toFixed(2) %>
+              </td>
               <td class="table__stock"><%= product.stock_quantity %></td>
               <td><span class="badge <%= stockClass %>"><%= stockStatus %></span></td>
               <td class="table__actions">
@@ -131,11 +158,24 @@
 
   </main>
 
-  <!-- ── Toast (client-side, reads ?success query param) ── -->
+  <!-- ── Toast ── -->
   <div id="toast" class="toast toast--hidden"></div>
+
+  <!-- ── Inject server-side rates into client ── -->
+  <script>
+    window.__RATES__ = {
+      USD: 1,
+      EUR: <%= rates.EUR %>,
+      INR: <%= rates.INR %>,
+      GBP: <%= rates.GBP %>,
+      source: "<%= rates.source %>",
+      updatedAt: "<%= rates.updatedAt %>"
+    };
+  </script>
 
   <script src="/js/main.js"></script>
   <script>
+    // Success toast from redirect query param
     const params = new URLSearchParams(window.location.search);
     const msg    = params.get("success");
     if (msg) showToast(decodeURIComponent(msg.replace(/\+/g, " ")));
