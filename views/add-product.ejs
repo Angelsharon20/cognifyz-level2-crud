@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProductHub — Add Product</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar__brand">
+      <span class="topbar__icon">⬡</span>
+      <span class="topbar__name">ProductHub</span>
+    </div>
+    <a href="/" class="btn btn--ghost btn--sm">← Dashboard</a>
+  </header>
+
+  <main class="page page--narrow">
+
+    <div class="page__head">
+      <div>
+        <h1 class="page__title">Add New Product</h1>
+        <p class="page__sub">Fill in the details below. All fields are required.</p>
+      </div>
+    </div>
+
+    <!-- ── Server-side validation errors ── -->
+    <% if (errors && errors.length > 0) { %>
+      <div class="alert alert--error" role="alert">
+        <strong>Please fix the following:</strong>
+        <ul class="alert__list">
+          <% errors.forEach(err => { %><li><%= err %></li><% }) %>
+        </ul>
+      </div>
+    <% } %>
+
+    <div class="form-card">
+      <form action="/products" method="POST" class="form" id="productForm" novalidate>
+
+        <div class="form__group">
+          <label class="form__label" for="product_name">Product Name</label>
+          <input
+            class="input"
+            type="text"
+            id="product_name"
+            name="product_name"
+            value="<%= formData.product_name || '' %>"
+            placeholder="e.g. Wireless Noise-Cancelling Headphones"
+            maxlength="120"
+            required
+          />
+          <span class="form__hint">2–120 characters.</span>
+        </div>
+
+        <div class="form__row">
+          <div class="form__group">
+            <label class="form__label" for="price">Price (USD)</label>
+            <div class="input-prefix-wrap">
+              <span class="input-prefix">$</span>
+              <input
+                class="input input--prefixed"
+                type="number"
+                id="price"
+                name="price"
+                value="<%= formData.price || '' %>"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form__group">
+            <label class="form__label" for="stock_quantity">Stock Quantity</label>
+            <input
+              class="input"
+              type="number"
+              id="stock_quantity"
+              name="stock_quantity"
+              value="<%= formData.stock_quantity || '' %>"
+              placeholder="0"
+              min="0"
+              step="1"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form__group">
+          <label class="form__label" for="category">Category</label>
+          <select class="input" id="category" name="category" required>
+            <option value="" disabled <%= !formData.category ? 'selected' : '' %>>Select a category…</option>
+            <% categories.forEach(cat => { %>
+              <option value="<%= cat %>" <%= formData.category === cat ? 'selected' : '' %>><%= cat %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form__actions">
+          <button type="submit" class="btn btn--primary">Save Product</button>
+          <a href="/" class="btn btn--ghost">Cancel</a>
+        </div>
+
+      </form>
+    </div>
+
+  </main>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProductHub — Edit Product</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar__brand">
+      <span class="topbar__icon">⬡</span>
+      <span class="topbar__name">ProductHub</span>
+    </div>
+    <a href="/" class="btn btn--ghost btn--sm">← Dashboard</a>
+  </header>
+
+  <main class="page page--narrow">
+
+    <div class="page__head">
+      <div>
+        <h1 class="page__title">Edit Product</h1>
+        <p class="page__sub">Update the fields below and save your changes.</p>
+      </div>
+      <span class="badge badge--id">ID: <%= product._id %></span>
+    </div>
+
+    <!-- ── Server-side validation errors ── -->
+    <% if (errors && errors.length > 0) { %>
+      <div class="alert alert--error" role="alert">
+        <strong>Please fix the following:</strong>
+        <ul class="alert__list">
+          <% errors.forEach(err => { %><li><%= err %></li><% }) %>
+        </ul>
+      </div>
+    <% } %>
+
+    <div class="form-card">
+      <!--
+        HTML forms only support GET/POST.
+        method-override middleware reads ?_method=PUT and converts to PUT on the server.
+      -->
+      <form
+        action="/products/<%= product._id %>?_method=PUT"
+        method="POST"
+        class="form"
+        id="productForm"
+        novalidate
+      >
+
+        <div class="form__group">
+          <label class="form__label" for="product_name">Product Name</label>
+          <input
+            class="input"
+            type="text"
+            id="product_name"
+            name="product_name"
+            value="<%= product.product_name %>"
+            placeholder="Product name"
+            maxlength="120"
+            required
+          />
+          <span class="form__hint">2–120 characters.</span>
+        </div>
+
+        <div class="form__row">
+          <div class="form__group">
+            <label class="form__label" for="price">Price (USD)</label>
+            <div class="input-prefix-wrap">
+              <span class="input-prefix">$</span>
+              <input
+                class="input input--prefixed"
+                type="number"
+                id="price"
+                name="price"
+                value="<%= product.price %>"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form__group">
+            <label class="form__label" for="stock_quantity">Stock Quantity</label>
+            <input
+              class="input"
+              type="number"
+              id="stock_quantity"
+              name="stock_quantity"
+              value="<%= product.stock_quantity %>"
+              placeholder="0"
+              min="0"
+              step="1"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form__group">
+          <label class="form__label" for="category">Category</label>
+          <select class="input" id="category" name="category" required>
+            <option value="" disabled>Select a category…</option>
+            <% categories.forEach(cat => { %>
+              <option value="<%= cat %>" <%= product.category === cat ? 'selected' : '' %>><%= cat %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form__actions">
+          <button type="submit" class="btn btn--primary">Update Product</button>
+          <a href="/" class="btn btn--ghost">Cancel</a>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- ── Danger zone ── -->
+    <div class="danger-zone">
+      <p class="danger-zone__label">Danger Zone</p>
+      <p class="danger-zone__desc">Permanently delete this product from the database. This action cannot be undone.</p>
+      <form
+        action="/products/<%= product._id %>?_method=DELETE"
+        method="POST"
+        onsubmit="return confirmDelete(event, '<%= product.product_name %>')"
+      >
+        <button type="submit" class="btn btn--danger btn--sm">Delete This Product</button>
+      </form>
+    </div>
+
+  </main>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

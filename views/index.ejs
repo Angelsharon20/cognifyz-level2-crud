@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProductHub — Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- ── Top nav ── -->
+  <header class="topbar">
+    <div class="topbar__brand">
+      <span class="topbar__icon">⬡</span>
+      <span class="topbar__name">ProductHub</span>
+    </div>
+    <a href="/products/new" class="btn btn--primary btn--sm">+ Add Product</a>
+  </header>
+
+  <main class="page">
+
+    <!-- ── Page heading ── -->
+    <div class="page__head">
+      <div>
+        <h1 class="page__title">Inventory Dashboard</h1>
+        <p class="page__sub">Live view of all products in your catalogue.</p>
+      </div>
+    </div>
+
+    <!-- ── Toast notification ── -->
+    <% const success = typeof success !== 'undefined' ? success : (new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')).get('success'); %>
+    <!-- EJS-side query param read -->
+    <% 
+      // Parse ?success from the request — passed via redirect query string
+      // We read it from the URL in EJS via a helper trick: the route passes nothing,
+      // so we rely on the <script> block to show the toast client-side.
+    %>
+
+    <!-- ── Stats cards ── -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-card__label">Total Products</span>
+        <span class="stat-card__value"><%= totalProducts %></span>
+      </div>
+      <div class="stat-card stat-card--accent">
+        <span class="stat-card__label">Inventory Value</span>
+        <span class="stat-card__value">$<%= totalValue %></span>
+      </div>
+      <div class="stat-card stat-card--warn">
+        <span class="stat-card__label">Low Stock</span>
+        <span class="stat-card__value"><%= lowStockCount %></span>
+      </div>
+      <div class="stat-card stat-card--danger">
+        <span class="stat-card__label">Out of Stock</span>
+        <span class="stat-card__value"><%= outOfStockCount %></span>
+      </div>
+    </div>
+
+    <!-- ── Filters ── -->
+    <form class="filter-bar" method="GET" action="/">
+      <input
+        class="input filter-bar__search"
+        type="text"
+        name="search"
+        placeholder="Search products…"
+        value="<%= search %>"
+      />
+      <select class="input filter-bar__select" name="category">
+        <option value="">All Categories</option>
+        <% categories.forEach(cat => { %>
+          <option value="<%= cat %>" <%= category === cat ? 'selected' : '' %>><%= cat %></option>
+        <% }) %>
+      </select>
+      <select class="input filter-bar__select" name="sort">
+        <option value="createdAt_desc" <%= sort === 'createdAt_desc' ? 'selected' : '' %>>Newest First</option>
+        <option value="createdAt_asc"  <%= sort === 'createdAt_asc'  ? 'selected' : '' %>>Oldest First</option>
+        <option value="price_asc"      <%= sort === 'price_asc'      ? 'selected' : '' %>>Price ↑</option>
+        <option value="price_desc"     <%= sort === 'price_desc'     ? 'selected' : '' %>>Price ↓</option>
+        <option value="product_name_asc"  <%= sort === 'product_name_asc'  ? 'selected' : '' %>>Name A–Z</option>
+        <option value="stock_quantity_asc" <%= sort === 'stock_quantity_asc' ? 'selected' : '' %>>Stock ↑</option>
+      </select>
+      <button class="btn btn--secondary btn--sm" type="submit">Filter</button>
+      <% if (search || category) { %>
+        <a href="/" class="btn btn--ghost btn--sm">Clear</a>
+      <% } %>
+    </form>
+
+    <!-- ── Products table ── -->
+    <% if (products.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-state__icon">📦</span>
+        <p class="empty-state__msg">No products found. <a href="/products/new">Add your first product →</a></p>
+      </div>
+    <% } else { %>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% products.forEach((product, i) => { 
+              let stockStatus = 'In Stock';
+              let stockClass  = 'badge--green';
+              if (product.stock_quantity === 0)       { stockStatus = 'Out of Stock'; stockClass = 'badge--red'; }
+              else if (product.stock_quantity < 10)   { stockStatus = 'Low Stock';    stockClass = 'badge--yellow'; }
+            %>
+            <tr class="table__row">
+              <td class="table__num"><%= i + 1 %></td>
+              <td class="table__name"><%= product.product_name %></td>
+              <td><span class="badge badge--cat"><%= product.category %></span></td>
+              <td class="table__price">$<%= product.price.toFixed(2) %></td>
+              <td class="table__stock"><%= product.stock_quantity %></td>
+              <td><span class="badge <%= stockClass %>"><%= stockStatus %></span></td>
+              <td class="table__actions">
+                <a href="/products/<%= product._id %>/edit" class="btn btn--edit btn--xs">Edit</a>
+                <form
+                  action="/products/<%= product._id %>?_method=DELETE"
+                  method="POST"
+                  class="inline-form"
+                  onsubmit="return confirmDelete(event, '<%= product.product_name %>')"
+                >
+                  <button type="submit" class="btn btn--danger btn--xs">Delete</button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <p class="table__count"><%= products.length %> product<%= products.length !== 1 ? 's' : '' %> shown</p>
+    <% } %>
+
+  </main>
+
+  <!-- ── Toast (client-side, reads ?success query param) ── -->
+  <div id="toast" class="toast toast--hidden"></div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    // Show success toast if redirect carried ?success=...
+    const params = new URLSearchParams(window.location.search);
+    const msg    = params.get("success");
+    if (msg) showToast(decodeURIComponent(msg.replace(/\+/g, " ")));
+  </script>
+</body>
+</html>
