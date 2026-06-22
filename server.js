@@ -45,6 +45,7 @@ mongoose.connection.on("reconnected", () =>
 );
 mongoose.connection.on("error", (err) =>
   console.error("❌  MongoDB runtime error:", err.message)
+                       mongoose.connect(process.env.MONGODB_URI)
 );
 
 // ── View engine ───────────────────────────────────────────────────────────────
