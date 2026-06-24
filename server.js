@@ -43,8 +43,9 @@ mongoose.connection.on("disconnected", () =>
 mongoose.connection.on("reconnected", () =>
   console.log("✅  MongoDB reconnected.")
 );
+// ✅ FIXED
 mongoose.connection.on("error", (err) =>
- console.error("MongoDB runtime error:", err.message);
+  console.error("MongoDB runtime error:", err.message)
 );
 
 // ── View engine ───────────────────────────────────────────────────────────────
